@@ -1,0 +1,44 @@
+<div class="container mt-5">
+
+  <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col-12 text-center">
+      <h1 class="display-5 text-secondary">Welcome back!</h1>
+      <p class="lead text-muted">Ready to start your day?</p>
+    </div>
+  </div>
+
+  <!-- Main Clock-In Card -->
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+      <div class="card shadow rounded-4 text-center border-0">
+        <div class="card-header bg-transparent border-0 pt-4">
+          <h5 class="text-uppercase letter-spacing-2 text-muted">Current Status</h5>
+          <span class="badge bg-secondary rounded-pill px-3 py-2">Clocked Out</span>
+        </div>
+
+        <div class="card-body py-5">
+          <!-- Big Timer Display -->
+          <h1 class="display-1 fw-bold text-dark font-monospace">00:00:00</h1>
+          <p class="text-muted">Hours worked today</p>
+
+          <!-- Action Buttons -->
+          <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mt-4">
+            <button class="btn btn-success btn-lg px-5 rounded-pill shadow-sm">
+              <i class="bi bi-play-circle-fill me-2"></i> Clock In
+            </button>
+            <button class="btn btn-danger btn-lg px-5 rounded-pill shadow-sm disabled">
+              <i class="bi bi-stop-circle-fill me-2"></i> Clock Out
+            </button>
+          </div>
+        </div>
+
+        <div class="card-footer bg-light border-0 py-3 rounded-bottom-4">
+          <button class="btn btn-link text-decoration-none" (click)="onLogout()">
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

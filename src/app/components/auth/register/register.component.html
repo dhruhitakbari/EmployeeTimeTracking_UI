@@ -1,0 +1,122 @@
+<div class="container mt-5 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-success text-white text-center rounded-top-4">
+          <h2 class="my-2">Create Employee Account</h2>
+          <p class="mb-0">Enter your details to register</p>
+        </div>
+        <div class="card-body p-4">
+
+          <!-- Registration Form starts here -->
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+            <!-- Name Fields (Row) -->
+            <div class="row mb-3">
+              <!-- First Name -->
+              <div class="col-md-6">
+                <label for="firstName" class="form-label">First Name</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  formControlName="firstName"
+                  class="form-control"
+                  [ngClass]="{ 'is-invalid': f['firstName'].invalid && f['firstName'].touched }"
+                  placeholder="John"
+                >
+                <div *ngIf="f['firstName'].invalid && f['firstName'].touched" class="invalid-feedback">
+                  First Name is required.
+                </div>
+              </div>
+
+              <!-- Last Name -->
+              <div class="col-md-6">
+                <label for="lastName" class="form-label">Last Name</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  formControlName="lastName"
+                  class="form-control"
+                  [ngClass]="{ 'is-invalid': f['lastName'].invalid && f['lastName'].touched }"
+                  placeholder="Doe"
+                >
+                <div *ngIf="f['lastName'].invalid && f['lastName'].touched" class="invalid-feedback">
+                  Last Name is required.
+                </div>
+              </div>
+            </div>
+
+            <!-- Email Field -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                class="form-control"
+                [ngClass]="{ 'is-invalid': f['email'].invalid && f['email'].touched }"
+                placeholder="employee@company.com"
+              >
+              <div *ngIf="f['email'].invalid && f['email'].touched" class="invalid-feedback">
+                <div *ngIf="f['email'].errors?.['required']">Email is required.</div>
+                <div *ngIf="f['email'].errors?.['email']">Enter a valid email address.</div>
+              </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input
+                type="password"
+                id="password"
+                formControlName="password"
+                class="form-control"
+                [ngClass]="{ 'is-invalid': f['password'].invalid && f['password'].touched }"
+                placeholder="Min 6 characters"
+              >
+              <div *ngIf="f['password'].invalid && f['password'].touched" class="invalid-feedback">
+                <div *ngIf="f['password'].errors?.['required']">Password is required.</div>
+                <div *ngIf="f['password'].errors?.['minlength']">Password must be at least 6 characters.</div>
+              </div>
+            </div>
+
+            <!-- Optional Designation ID Field (Admin will set this later) -->
+            <div class="mb-4">
+              <label for="designationId" class="form-label">Designation ID (Optional)</label>
+              <input
+                type="number"
+                id="designationId"
+                formControlName="designationId"
+                class="form-control"
+                placeholder="Leave blank, Admin will assign"
+              >
+              <small class="form-text text-muted">For initial setup, leave this blank unless Admin provided a pre-existing ID.</small>
+            </div>
+
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2">
+              <button
+                type="submit"
+                class="btn btn-success btn-lg rounded-pill"
+                [disabled]="registerForm.invalid || loading"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                {{ loading ? 'Creating Account...' : 'Register Account' }}
+              </button>
+            </div>
+          </form>
+          <!-- Registration Form ends here -->
+        </div>
+
+        <div class="card-footer text-center bg-light border-0 rounded-bottom-4">
+          <p class="mb-1">Already have an account?
+            <a [routerLink]="['/login']" class="text-success fw-bold">Login Here</a>
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

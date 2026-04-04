@@ -1,0 +1,20 @@
+<div class="d-flex w-100" style="height: 100vh; overflow: hidden;">
+
+  <!-- 1. The Sidebar (Fixed Width) -->
+  <div style="width: 250p x; flex-shrink: 0;">
+    <app-sidebar></app-sidebar>
+  </div>
+
+  <!-- 2. Main Content Area (Flexible width) -->
+  <div class="flex-grow-1 flex-column" style="overflow-y: auto; background-color: #f3f3f9;">
+
+    <!-- Top Navbar (Optional, for search/notifications) -->
+    <app-navbar></app-navbar>
+
+    <!-- THE PAGE CONTENT LOADS HERE -->
+    <div class="p-4">
+      <router-outlet></router-outlet>
+    </div>
+
+  </div>
+</div>
