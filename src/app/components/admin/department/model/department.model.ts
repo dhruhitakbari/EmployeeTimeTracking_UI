@@ -10,3 +10,8 @@ export interface CreateDepartmentRequest {
   Description:string;
   createdDate: Date;
 }
+
+
+export interface DepartmentByIdRequest {
+  id: number;
+}

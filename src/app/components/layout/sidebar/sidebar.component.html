@@ -3,7 +3,7 @@
   Added (mouseenter) and (mouseleave) to trigger the hover logic
 -->
 <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark vh-100 shadow"
-     (mouseenter)="onHover(true)"
+       (mouseenter)="onHover(true)"
      (mouseleave)="onHover(false)"
      [style.width.px]="(isCollapsed && !isHovered) ? 80 : 280"
      style="transition: width 0.3s ease-in-out; overflow: hidden; position: relative; z-index: 1050;">

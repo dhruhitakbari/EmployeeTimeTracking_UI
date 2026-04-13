@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Department } from './model/department.model';
+import { Department, DepartmentByIdRequest } from './model/department.model';
 import { ToastrService } from 'ngx-toastr';
 import { DepartmentService } from './department.service';
 
@@ -49,7 +49,7 @@ export class DepartmentComponent {
   loadDepartments() {
     this.isLoading = true;
     // Calling the inherited 'getAll()' method from ApiBaseService
-    this.departmentService.SelectAllDepartment().subscribe({
+    this.departmentService.getAll().subscribe({
       next: (res) => {
         if (res.success) {
           this.departments = res.data;
@@ -76,8 +76,8 @@ export class DepartmentComponent {
     this.isEditMode = true;
     this.currentDeptId = dept.departmentId;
     if (this.currentDeptId) {
-
-      this.departmentService.getById(this.currentDeptId).subscribe({
+      const request: DepartmentByIdRequest = { id: this.currentDeptId };
+      this.departmentService.getById(request).subscribe({
         next: (res) => {
           if (res) {
             console.log(res);

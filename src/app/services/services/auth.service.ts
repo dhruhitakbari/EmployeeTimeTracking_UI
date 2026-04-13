@@ -1,103 +1,131 @@
+// auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { LoginRequest, LoginResponse, RegisterRequest, ServiceResponse } from '../../models/auth.models';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
+import {
+  LoginRequest, LoginResponse,
+  RegisterRequest, RegisterResponse,
+  ServiceResponse, DecodedToken
+} from '../../models/auth.models';  // ← adjust path if needed
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  private apiUrl = 'https://localhost:44334/api/Auth';
+  // ─── CONFIG ────────────────────────────────────────────────────────────────
+  private readonly API_URL   = 'https://localhost:44334/api/Auth';
+  private readonly TOKEN_KEY = 'emp_token';
 
-  private tokenKey = 'authToken';
-  private userKey = 'userEmail';
-  //private roleKey = 'userRole';
-
+  // ─── STATE ─────────────────────────────────────────────────────────────────
+  // BehaviorSubject lets any component subscribe and react to login/logout
   private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
-  public isLoggedIn$ = this.isLoggedInSubject.asObservable();
+  public  isLoggedIn$       = this.isLoggedInSubject.asObservable();
 
   constructor(
-    private http: HttpClient,
-    private router: Router,
-    private toastr: ToastrService
+    private http:    HttpClient,
+    private router:  Router,
+    private toastr:  ToastrService
   ) {}
 
-  // REGISTER
-  register(request: RegisterRequest): Observable<ServiceResponse<any>> {
-    return this.http.post<ServiceResponse<any>>(`${this.apiUrl}/register`, request).pipe(
-      tap(response => {
-        if (response.success && response.data?.token) {
-          this.saveToken(
-            response.data.token,
-            response.data.email,
-            response.data.role      // FIXED
-          );
-          this.toastr.success('Registration successful!', 'Welcome');
-        }
-      })
-    );
-  }
-
-  // LOGIN
+  // ─── LOGIN ─────────────────────────────────────────────────────────────────
   login(request: LoginRequest): Observable<ServiceResponse<LoginResponse>> {
-    return this.http.post<ServiceResponse<LoginResponse>>(`${this.apiUrl}/login`, request).pipe(
-      tap(response => {
-        if (response.success && response.data) {
-          this.saveToken(
-            response.data.token,
-            response.data.email,
-            response.data.role
-          );
-          this.toastr.success('Logged in successfully!');
-        }
-      })
-    );
+    return this.http
+      .post<ServiceResponse<LoginResponse>>(`${this.API_URL}/login`, request)
+      .pipe(
+        tap(response => {
+          if (response.success && response.data?.token) {
+            this.saveToken(response.data.token);
+            this.toastr.success(`Welcome back, ${response.data.fullName}!`, 'Login Successful');
+          }
+        })
+      );
   }
 
-  logout() {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userKey);
+  // ─── REGISTER ──────────────────────────────────────────────────────────────
+  register(request: RegisterRequest): Observable<ServiceResponse<RegisterResponse>> {
+    return this.http
+      .post<ServiceResponse<RegisterResponse>>(`${this.API_URL}/register`, request)
+      .pipe(
+        tap(response => {
+          if (response.success && response.data?.token) {
+            this.saveToken(response.data.token);
+            this.toastr.success('Registration successful! Welcome!');
+          }
+        })
+      );
+  }
 
+  // ─── LOGOUT ────────────────────────────────────────────────────────────────
+  logout(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
     this.isLoggedInSubject.next(false);
-    this.router.navigate(['/login']);
     this.toastr.info('Logged out successfully');
+    this.router.navigate(['/login']);
   }
 
-  private saveToken(token: string, email: string, role: string) {
-    localStorage.setItem(this.tokenKey, token);
-    localStorage.setItem(this.userKey, email);
-    console.log('TOKEN:', localStorage.getItem('authToken'));
-    const length = localStorage.getItem('authToken')?.split('.').length;
-    console.log(length)
-    this.isLoggedInSubject.next(true);
-  }
+  // ─── TOKEN HELPERS ─────────────────────────────────────────────────────────
 
+  // Called by JwtInterceptor to attach token to every request
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  getUserRole(): string | null {
-    // return localStorage.getItem(this.roleKey);
-    const decoded = this.getDecodedToken();
-    return decoded?.role || null;
-  }
-
-  // NEW — Optional
-  getDecodedToken(): any {
+  // Decode the JWT payload — no external library needed!
+  getDecodedToken(): DecodedToken | null {
     const token = this.getToken();
     if (!token) return null;
-    return JSON.parse(atob(token.split('.')[1]));
+    try {
+      const payload = token.split('.')[1];       // get middle part
+      const decoded = atob(payload);             // base64 decode
+      return JSON.parse(decoded) as DecodedToken;
+    } catch {
+      return null;
+    }
   }
 
-  // NEW
+  // ─── USER INFO (read from token — no extra API call needed!) ───────────────
+  getUserRole(): string | null {
+    return this.getDecodedToken()?.role ?? null;
+  }
+
+  getUserName(): string | null {
+    return this.getDecodedToken()?.name ?? null;
+  }
+
+  getUserEmail(): string | null {
+    return this.getDecodedToken()?.email ?? null;
+  }
+
+  getUserId(): string | null {
+    return this.getDecodedToken()?.sub ?? null;
+  }
+
   isAdmin(): boolean {
     return this.getUserRole() === 'Admin';
   }
 
+  isEmployee(): boolean {
+    return this.getUserRole() === 'Employee';
+  }
+
+  // Check if token is expired
+  isTokenExpired(): boolean {
+    const decoded = this.getDecodedToken();
+    if (!decoded) return true;
+    const now = Math.floor(Date.now() / 1000);  // current time in seconds
+    return decoded.exp < now;
+  }
+
+  // ─── PRIVATE HELPERS ───────────────────────────────────────────────────────
+  private saveToken(token: string): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
+    this.isLoggedInSubject.next(true);
+  }
+
   private hasToken(): boolean {
-    return !!localStorage.getItem(this.tokenKey);
+    return !!localStorage.getItem(this.TOKEN_KEY);
   }
 }

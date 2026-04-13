@@ -1,63 +1,45 @@
+import { ServiceResponse } from './../../models/auth.models';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ServiceResponse } from '../../models/auth.models';
 
+@Injectable({ providedIn: 'root' })
+export class ApiBaseService {
+  private readonly baseUrl:string = 'https://localhost:44334/api'
 
-export class ApiBaseService<T> {
+  constructor( protected http: HttpClient ) {}
 
-  constructor(
-    protected http: HttpClient,
-    protected baseUrl: string // This will be the full path: e.g., https://localhost:7001/api/Department
-  ) {}
-
-   getAll(): Observable<ServiceResponse<T[]>> {
-    return this.http.get<ServiceResponse<T[]>>(this.baseUrl);
+  get<T>(endpoint:string,params?: Record<string, any>):
+    Observable<ServiceResponse<T>> {
+      const httpParams = this.buildParams(params);
+      return this.http.get<ServiceResponse<T>>(`${this.baseUrl}/${endpoint}`,{params:httpParams});
   }
 
-  getById(id: number): Observable<ServiceResponse<T>> {
-    return this.http.get<ServiceResponse<T>>(`${this.baseUrl}/${id}`);
+    post<T>(endpoint: string, body: any): Observable<ServiceResponse<T>> {
+        return this.http.post<ServiceResponse<T>>(`${this.baseUrl}/${endpoint}`, body);
+    }
+
+    put<T>(endpoint: string, body: any): Observable<ServiceResponse<T>> {
+        return this.http.put<ServiceResponse<T>>(`${this.baseUrl}/${endpoint}`, body);
+    }
+
+  delete<T>(endpoint: string): Observable<ServiceResponse<T>> {
+    return this.http.delete<ServiceResponse<T>>(`${this.baseUrl}/${endpoint}`);
+}
+
+  // Think of HttpParams as a "question mark" builder for URLs.
+  // ex:https://api.com/users?page=2&limit=10&sort=name
+  // The part after ? (page=2&limit=10&sort=name) is called query parameters.
+  //HttpParams  is an Angular tool that helps you build that part correctly and safely.
+  private buildParams(params?: Record<string, any>): HttpParams {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          httpParams = httpParams.set(key, value);
+        }
+      });
+    }
+    return httpParams;
   }
-
-  create(model: T): Observable<ServiceResponse<string>> {
-    return this.http.post<ServiceResponse<string>>(this.baseUrl, model);
-  }
-
-  update(id: number, model: T): Observable<ServiceResponse<string>> {
-    return this.http.put<ServiceResponse<string>>(`${this.baseUrl}/${id}`, model);
-  }
-
-  delete(id: number): Observable<ServiceResponse<string>> {
-    return this.http.delete<ServiceResponse<string>>(`${this.baseUrl}/${id}`);
-  }
-
-  // get<T>(endpoint:string, params?: Record<string, any>): Observable<ServiceResponse<T>>  {
-  //   const httpParams = this.buildParams(params);
-  //   return this.http.get<ServiceResponse<T>>('${this.baseUrl}/${endPoint}',{params:httpParams});
-  // }
-
-  // post<T>(endpoint: string, body: any): Observable<ServiceResponse<string>> {
-  //   return this.http.post<ServiceResponse<string>>(`${this.baseUrl}/${endpoint}`, body);
-  // }`
-
-  // put<T>(endpoint: string, body: any): Observable<ServiceResponse<string>> {
-  //   return this.http.put<ServiceResponse<string>>(`${this.baseUrl}/${endpoint}`, body);
-  // }
-
-  // delete<T>(endpoint: string): Observable<ServiceResponse<string>> {
-  //   return this.http.delete<ServiceResponse<string>>(`${this.baseUrl}/${endpoint}`);
-  // }
-
-
-  // private buildParams(params?: Record<string, any>): HttpParams {
-  //   let httpParams = new HttpParams();
-  //   if (params) {
-  //     Object.entries(params).forEach(([key, value]) => {
-  //       if (value !== null && value !== undefined) {
-  //         httpParams = httpParams.set(key, value);
-  //       }
-  //     });
-  //   }
-  //   return httpParams;
-  // }
 }

@@ -12,37 +12,36 @@ import { LoginRequest } from '../../../models/auth.models';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+
   loginForm!: FormGroup;
   loading: boolean = false;
 
-  // Define the base API URL to display to the user for reference
-  apiBaseUrl: string = 'http://localhost:5274/api/Auth/login';
-
   constructor(
-    private fb: FormBuilder,
+    private fb:          FormBuilder,
     private authService: AuthService,
-    private router: Router,
-    private toastr: ToastrService
+    private router:      Router,
+    private toastr:      ToastrService
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
-    // If the user is already logged in, redirect them to the dashboard
+
+    //  If already logged in → redirect to correct dashboard
     this.authService.isLoggedIn$.subscribe(isLoggedIn => {
-      if (isLoggedIn) {
-        this.router.navigate(['/dashboard']);
+      if (isLoggedIn && !this.authService.isTokenExpired()) {
+        this.redirectToDashboard();  //  role-based redirect
       }
     });
   }
 
   initializeForm(): void {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      email:    ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
-  // Helper method to easily access form controls in the template
+  // Easy access to form controls in template
   get f() {
     return this.loginForm.controls;
   }
@@ -58,33 +57,31 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(request).subscribe({
       next: (response) => {
-        // Since we handle the token saving in the AuthService (tap operator),
-        // we just need to handle navigation and success messages here.
+        this.loading = false;
         if (response.success) {
-          // Navigate to a protected route (e.g., dashboard)
-          const role = this.authService.getUserRole();
-          debugger;
-          if (role === 'Admin') {
-            this.router.navigate(['/admin-dashboard']);
-          } else {
-            this.router.navigate(['/employee-dashboard']);
-          }
+          this.redirectToDashboard();  //  clean role-based redirect
         } else {
-          // Handle expected server error (e.g., Invalid email/password message)
           this.toastr.error(response.message || 'Login failed, please try again.', 'Error');
         }
-        this.loading = false;
       },
       error: (error: HttpErrorResponse) => {
         this.loading = false;
-        // Handle unexpected HTTP errors (401 Unauthorized, Server Down, etc.)
         if (error.status === 401 || error.status === 400) {
-           this.toastr.error('Invalid email or password.', 'Login Failed');
+          this.toastr.error('Invalid email or password.', 'Login Failed');
         } else {
-           this.toastr.error('A server error occurred. Please try again later.', 'Network Error');
+          this.toastr.error('A server error occurred. Please try again later.', 'Network Error');
         }
         console.error('Login Error:', error);
       }
     });
+  }
+
+  //  Extracted into reusable method — used in both ngOnInit and onSubmit
+  private redirectToDashboard(): void {
+    if (this.authService.isAdmin()) {
+      this.router.navigate(['/app/admin-dashboard']);
+    } else {
+      this.router.navigate(['/app/employee-dashboard']);
+    }
   }
 }

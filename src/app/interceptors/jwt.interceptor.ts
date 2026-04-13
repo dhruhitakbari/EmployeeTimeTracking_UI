@@ -1,13 +1,11 @@
+// jwt.interceptor.ts
 import { Injectable } from '@angular/core';
 import {
-  HttpRequest,
-  HttpHandler,
-  HttpEvent,
-  HttpInterceptor
+  HttpRequest, HttpHandler,
+  HttpEvent, HttpInterceptor
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AuthService } from '../services/services/auth.service';
-
+import { AuthService } from '../services/services/auth.service'; // ← adjust path
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
@@ -15,20 +13,18 @@ export class JwtInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    debugger;
-    // 1. Get the token from AuthService
+
     const token = this.authService.getToken();
 
-    // 2. If token exists, clone the request and add the Authorization header "(Bearer)"
-    if (token) {
+    // Only attach token if it exists AND is not expired
+    if (token && !this.authService.isTokenExpired()) {
       request = request.clone({
         setHeaders: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`  // ✅ Angular adds "Bearer " prefix
         }
       });
     }
-    console.log(request);
-    // 3. Pass the request to the next handler
+
     return next.handle(request);
   }
 }

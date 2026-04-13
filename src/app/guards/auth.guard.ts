@@ -4,19 +4,27 @@ import { ToastrService } from 'ngx-toastr';
 import { inject } from '@angular/core';
 
 export const authGuard: CanActivateFn = (route, state) => {
-    const authService = inject(AuthService);
-  const router = inject(Router);
-  const toastr = inject(ToastrService);
+  const authService = inject(AuthService);
+  const router      = inject(Router);
+  const toastr      = inject(ToastrService);
 
   const token = authService.getToken();
 
-  // --- If token exists → allow navigation ---
-  if (token && token.trim().length > 0) {
+  // Check token exists AND is not expired
+  if (token && !authService.isTokenExpired()) {
     return true;
   }
 
-  // --- If no token → show message & redirect to login ---
-  toastr.info('Please login to continue');
+  // Token missing → show login message
+  // Token expired → show session expired message
+  if (token && authService.isTokenExpired()) {
+    toastr.warning('Your session has expired. Please login again.', 'Session Expired');
+  } else {
+    toastr.info('Please login to continue', 'Login Required');
+  }
 
-  return router.createUrlTree( ['/login'], { queryParams: { returnUrl: state.url || '/' } } );
+  return router.createUrlTree(
+    ['/login'],
+    { queryParams: { returnUrl: state.url || '/' } }
+  );
 };

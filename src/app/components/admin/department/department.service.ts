@@ -1,36 +1,40 @@
+import { API_ENDPOINTS } from './../../../constants/api-endpoints';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiBaseService } from '../../../services/services/api-base.service';
-import { Department } from './model/department.model';
+import { Department, DepartmentByIdRequest } from './model/department.model';
 import { Observable } from 'rxjs';
 import { ServiceResponse } from '../../../models/auth.models';
+import { ApiBaseService } from '../../../services/services/api-base.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class DepartmentService extends ApiBaseService<Department> {
+export class DepartmentService {
 
-  constructor(http: HttpClient) {
-    super(http, 'https://localhost:44334/api/Department');
+  private readonly endpoint = 'Department';
+  constructor(private api: ApiBaseService) {}
+
+  getAll(): Observable<ServiceResponse<Department[]>> {
+    return this.api.get<Department[]>(API_ENDPOINTS.DEPARTMENT.GET_ALL);          // T = Department[]
   }
 
-  SelectAllDepartment(): Observable<ServiceResponse<Department[]>> {
-    return this.http.get<ServiceResponse<Department[]>>(
-      `${this.baseUrl}/SelectAllDepartment`
-    );
+  getById(request: DepartmentByIdRequest): Observable<ServiceResponse<Department>> {
+  return this.api.get<Department>(
+    API_ENDPOINTS.DEPARTMENT.GET_BY_ID,
+    request   // ← any dev immediately knows it's a typed request object
+  );
+}
+
+
+  create(obj: Department): Observable<ServiceResponse<Department>> {
+    return this.api.post<Department>(API_ENDPOINTS.DEPARTMENT.INSERT, obj);  // T = Department
   }
 
-  override create(obj: any): Observable<ServiceResponse<string>> {
-    return this.http.post<ServiceResponse<string>>(
-      `${this.baseUrl}/InsertDepartment`,
-      obj
-    );
+  update(id: number, obj: Department): Observable<ServiceResponse<Department>> {
+    return this.api.put<Department>(`${this.endpoint}/${id}`, obj);
   }
 
-  override getById(id: number): Observable<ServiceResponse<Department>> {
-    return this.http.get<ServiceResponse<Department>>(
-      `${this.baseUrl}/SelectDepartment?id=${id}`
-    );
+  delete(id: number): Observable<ServiceResponse<Department>> {
+    return this.api.delete<Department>(`${this.endpoint}/${id}`);
   }
-
 }
