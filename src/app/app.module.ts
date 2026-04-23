@@ -19,6 +19,8 @@ import { MainLayoutComponent } from './components/layout/main-layout/main-layout
 import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
 import { RouterModule } from '@angular/router';
 import { DepartmentComponent } from './components/admin/department/department.component';
+import { DynamicFormComponent } from './components/shared/dynamic-form/dynamic-form.component';
+import { UserComponent } from './components/admin/user/user.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +33,8 @@ import { DepartmentComponent } from './components/admin/department/department.co
     MainLayoutComponent,
     SidebarComponent,
     DepartmentComponent,
+    DynamicFormComponent,
+    UserComponent,
   ],
    imports: [
     BrowserModule,

@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import { Department, DepartmentByIdRequest } from './model/department.model';
 import { Observable } from 'rxjs';
 import { ServiceResponse } from '../../../models/auth.models';
-import { ApiBaseService } from '../../../services/services/api-base.service';
+import { ApiBaseService } from '../../../services/api-base.service';
 
 @Injectable({
   providedIn: 'root'
@@ -30,8 +30,11 @@ export class DepartmentService {
     return this.api.post<Department>(API_ENDPOINTS.DEPARTMENT.INSERT, obj);  // T = Department
   }
 
-  update(id: number, obj: Department): Observable<ServiceResponse<Department>> {
-    return this.api.put<Department>(`${this.endpoint}/${id}`, obj);
+  // update(id: number, obj: Department): Observable<ServiceResponse<Department>> {
+  //   return this.api.put<Department>(`${this.endpoint}/${id}`, obj);
+  // }
+  update(obj: Department): Observable<ServiceResponse<Department>> {
+    return this.api.post<Department>(API_ENDPOINTS.DEPARTMENT.UPDATE, obj);  // T = Department
   }
 
   delete(id: number): Observable<ServiceResponse<Department>> {

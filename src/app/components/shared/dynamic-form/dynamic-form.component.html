@@ -1,0 +1,61 @@
+<!-- dynamic-form.component.html -->
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="row g-3">
+
+    <div class="col-12" *ngFor="let field of fields">
+      <label class="form-label">{{ field.label }}</label>
+
+      <!-- TEXT / EMAIL / NUMBER / DATE -->
+      <input
+        *ngIf="field.type !== 'textarea' && field.type !== 'select' && field.type !== 'checkbox'"
+        [type]="field.type"
+        class="form-control"
+        [formControlName]="field.name"
+        [placeholder]="field.placeholder || ''"
+        [class.is-invalid]="isInvalid(field.name)">
+
+      <!-- TEXTAREA -->
+      <textarea
+        *ngIf="field.type === 'textarea'"
+        class="form-control"
+        [formControlName]="field.name"
+        [placeholder]="field.placeholder || ''"
+        [class.is-invalid]="isInvalid(field.name)">
+      </textarea>
+
+      <!-- SELECT / DROPDOWN -->
+      <select
+        *ngIf="field.type === 'select'"
+        class="form-select"
+        [formControlName]="field.name"
+        [class.is-invalid]="isInvalid(field.name)">
+        <option value="">-- Select --</option>
+        <option *ngFor="let opt of field.options" [value]="opt.value">
+          {{ opt.label }}
+        </option>
+      </select>
+
+      <!-- CHECKBOX -->
+      <div *ngIf="field.type === 'checkbox'" class="form-check">
+        <input type="checkbox" class="form-check-input" [formControlName]="field.name">
+      </div>
+
+      <!-- ERROR MESSAGE -->
+      <div *ngIf="isInvalid(field.name)" class="text-danger small mt-1">
+        {{ getError(field.name) }}
+      </div>
+
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="col-12">
+      <div class="hstack gap-2 justify-content-end">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+          {{ isLoading ? 'Saving...' : 'Submit' }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</form>

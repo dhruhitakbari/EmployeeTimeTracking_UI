@@ -8,7 +8,7 @@ import {
   LoginRequest, LoginResponse,
   RegisterRequest, RegisterResponse,
   ServiceResponse, DecodedToken
-} from '../../models/auth.models';  // ← adjust path if needed
+} from '../models/auth.models';  // ← adjust path if needed
 
 @Injectable({
   providedIn: 'root'
