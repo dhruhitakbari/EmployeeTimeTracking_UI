@@ -19,11 +19,11 @@ export class DepartmentService {
   }
 
   getById(request: DepartmentByIdRequest): Observable<ServiceResponse<Department>> {
-  return this.api.get<Department>(
-    API_ENDPOINTS.DEPARTMENT.GET_BY_ID,
-    request   // ← any dev immediately knows it's a typed request object
-  );
-}
+    return this.api.get<Department>(
+      API_ENDPOINTS.DEPARTMENT.GET_BY_ID,
+      request   // ← any dev immediately knows it's a typed request object
+    );
+  }
 
 
   create(obj: Department): Observable<ServiceResponse<Department>> {

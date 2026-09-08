@@ -14,10 +14,11 @@ export const API_ENDPOINTS = {
     DELETE:   'Designation/DeleteDesignation',
   },
 
-  EMPLOYEE: {
-    GET_ALL:  'Employee/SelectAllEmployee',
-    INSERT:   'Employee/InsertEmployee',
-    UPDATE:   'Employee/UpdateEmployee',
-    DELETE:   'Employee/DeleteEmployee',
+  User: {
+    INSERT:   'User/InsertUser',
+    GET_BY_ID:'User/SelectUser',
+    GET_ALL:  'User/SelectAllUser',
+    UPDATE:   'User/UpdateUser',
+    DELETE:   'User/DeleteUser',
   }
 };

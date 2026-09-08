@@ -1,239 +1,535 @@
-import { FormFieldConfig } from './../../../models/form/form-field.model';
-import { Component, DebugElement, NgModuleRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Department, DepartmentByIdRequest } from './model/department.model';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+
+import { FormFieldConfig } from '../../../models/form/form-field.model';
+import {
+  Department,
+  DepartmentByIdRequest
+} from './model/department.model';
+
 import { ToastrService } from 'ngx-toastr';
 import { DepartmentService } from './department.service';
 import { DynamicFormService } from '../../../services/dynamic-form.service';
 
-// Declare bootstrap variable to use the Modal via TS
-declare var bootstrap: any;
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-department',
   templateUrl: './department.component.html',
-  styleUrl: './department.component.css'
+  styleUrl: './department.component.css',
+  providers: [ConfirmationService]
 })
-export class DepartmentComponent {
+export class DepartmentComponent implements OnInit {
+
+  // =====================================================
+  // DATA
+  // =====================================================
 
   departments: Department[] = [];
+
   departmentForm!: FormGroup;
 
-  // State variables
+  selectedDepartment: Department | null = null;
+
+
+  // =====================================================
+  // STATE
+  // =====================================================
+
   isLoading = false;
+
+  isViewLoading = false;
+
   isEditMode = false;
+
   currentDeptId: number | null = null;
 
-  // for View
-  selectedDepartment: Department | null = null;
-  isViewLoading = false;
-  private viewModalInstance: any;
 
-  // Modal reference
-  private formModal: any;
-  // departmentForm!: FormGroup;
+  // =====================================================
+  // DIALOG STATE
+  // =====================================================
+
+  displayFormDialog = false;
+
+  displayViewDialog = false;
+
+
+  // =====================================================
+  // FORM CONFIGURATION
+  // =====================================================
+
+  fields: FormFieldConfig[] = [
+
+    {
+      name: 'Name',
+      type: 'text',
+      label: 'Department Name',
+      required: true,
+      placeholder: 'Enter department name',
+      minLength: 3
+    },
+
+    {
+      name: 'Description',
+      type: 'text',
+      label: 'Description',
+      required: true,
+      placeholder: 'Enter description'
+    }
+
+  ];
+
+
+  // =====================================================
+  // CONSTRUCTOR
+  // =====================================================
+
   constructor(
-    // private deptService: DepartmentService,
     private fb: FormBuilder,
     private toastr: ToastrService,
     private departmentService: DepartmentService,
-    private dynamicFormService: DynamicFormService
+    private dynamicFormService: DynamicFormService,
+    private confirmationService: ConfirmationService
   ) { }
 
-  // ONLY THIS CONFIG — no form HTML needed
-  fields: FormFieldConfig[] = [
-    {name: 'Name', type:'text', label:'Department Name', required:true, placeholder: 'enter name', minLength:3 },
-    { name: 'Description', type: 'text', label: 'Description',  required: true, placeholder: 'Enter description' }
-  ]
 
+  // =====================================================
+  // INIT
+  // =====================================================
 
   ngOnInit(): void {
+
+    this.departmentForm =
+      this.dynamicFormService.buildForm(this.fields);
+
     this.loadDepartments();
-     this.departmentForm = this.dynamicFormService.buildForm(this.fields);
-     console.log(this.departmentForm);
+
   }
 
-  onFormSubmit(value: any): void {
-    console.log(value); // { Name: '...', Description: '...' }
-    // call your service here
-  }
 
-  // 2. Fetch Data
-  loadDepartments() {
+  // =====================================================
+  // GET ALL DEPARTMENTS
+  // =====================================================
+
+  loadDepartments(): void {
+
     this.isLoading = true;
-    // Calling the inherited 'getAll()' method from ApiBaseService
+
     this.departmentService.getAll().subscribe({
+
       next: (res) => {
+
         if (res.success) {
+
           this.departments = res.data;
+
         }
+        else {
+
+          this.toastr.error(
+            res.message || 'Failed to load departments'
+          );
+
+        }
+
         this.isLoading = false;
+
       },
+
       error: () => {
-        this.toastr.error('Failed to connect to server');
+
+        this.toastr.error(
+          'Failed to connect to server'
+        );
+
         this.isLoading = false;
+
       }
+
     });
+
   }
 
-  // 3. Open Modal (Add Mode)
-  openAddModal() {
+
+  // =====================================================
+  // ADD
+  // =====================================================
+
+  openAddModal(): void {
+
     this.isEditMode = false;
+
     this.currentDeptId = null;
+
     this.departmentForm.reset();
-    this.showModal();
+
+    this.displayFormDialog = true;
+
   }
 
 
-  // 5. Submit Form (Create or Update)
-  insertDepartmentClick(event: any) {
-    debugger;
-    if (this.departmentForm.invalid) return;
+  // =====================================================
+  // CREATE
+  // =====================================================
+
+  insertDepartmentClick(event: any): void {
+
+    if (this.departmentForm.invalid) {
+
+      this.departmentForm.markAllAsTouched();
+
+      return;
+
+    }
+
 
     this.isLoading = true;
-    let obj = <Department>{};
-    obj = this.departmentForm.value;
+
+    const obj: Department = {
+      ...this.departmentForm.value
+    };
+
 
     this.departmentService.create(obj).subscribe({
+
       next: (res) => {
-        debugger;
+
         if (res.success) {
-          this.toastr.success(res.message);
-          this.loadDepartments(); // Refresh list
-          this.hideModal();
-        } else {
-          this.toastr.error(res.message);
+
+          this.toastr.success(
+            res.message || 'Department created successfully'
+          );
+
+          this.displayFormDialog = false;
+
+          this.loadDepartments();
+
         }
+        else {
+
+          this.toastr.error(
+            res.message || 'Failed to create department'
+          );
+
+        }
+
         this.isLoading = false;
+
       },
-      error: (err) =>{
-        this.toastr.error(err.error.message);
-        this.isLoading = false
-      }
-    });
-  }
 
-  // 4. Open Modal (Edit Mode)
-  openEditModal(dept: Department) {
-    this.isEditMode = true;
-    this.currentDeptId = dept.departmentId;
-    if (this.currentDeptId) {
-      const request: DepartmentByIdRequest = { id: this.currentDeptId };
-      this.departmentService.getById(request).subscribe({
-        next: (res) => {
-          if (res) {
-            console.log(res);
-            this.departmentForm.controls['Name'].setValue(res.data.name);
-            this.departmentForm.controls['Description'].setValue(res.data.description);
-            // this.dynamicFormService.patchValue(this.departmentForm, res.data);
-          }
-          this.isLoading = false;
-        },
-        error: () => {
-          this.toastr.error('Failed to connect to server');
-          this.isLoading = false;
-        }
-      });
-      // Fill the form with existing data
-      // this.departmentForm.patchValue({
-      //   Name: dept.name
-      // });
-
-      this.showModal();
-    }
-  }
-
-  updateDepartmentClick(event: any) {
-      debugger;
-    this.isLoading = true;
-    let obj = <Department>{};
-    obj = this.departmentForm.value;
-    obj.departmentId = this.currentDeptId!;
-    this.departmentService.update(obj).subscribe({
-      next: (res) => {
-        debugger;
-        if (res.success) {
-          this.toastr.success(res.message);
-          this.loadDepartments(); // Refresh list
-          this.hideModal();
-        } else {
-          this.toastr.error(res.message);
-        }
-        this.isLoading = false;
-      },
       error: (err) => {
-        this.toastr.error(err.error.message);
-        this.isLoading = false
+
+        this.toastr.error(
+          err?.error?.message ||
+          'Failed to create department'
+        );
+
+        this.isLoading = false;
+
       }
+
     });
+
   }
 
 
-  openViewModal(dept: Department) {
-     this.currentDeptId = dept.departmentId;
+  // =====================================================
+  // EDIT
+  // =====================================================
 
-  // Show the modal immediately so the user sees the loading spinner
-  const modalElement = document.getElementById('viewDeptModal');
-  if (modalElement) {
-    this.viewModalInstance = new bootstrap.Modal(modalElement);
-    this.viewModalInstance.show();
-  }
+  openEditModal(dept: Department): void {
 
-  // Set loading to true and clear old data
-  this.isViewLoading = true;
-  this.selectedDepartment = null;
-  debugger;
-  // Call the new API endpoint!
- if (this.currentDeptId) {
-      const request: DepartmentByIdRequest = { id: this.currentDeptId };
-      this.departmentService.getById(request).subscribe({
-        next: (res) => {
-      if (res.success) {
-        this.selectedDepartment = res.data;
-      } else {
-        this.toastr.error(res.message);
-        this.viewModalInstance?.hide(); // Hide if failed
+    this.isEditMode = true;
+
+    this.currentDeptId = dept.departmentId;
+
+    this.displayFormDialog = true;
+
+    this.isLoading = true;
+
+
+    if (!this.currentDeptId) {
+
+      this.isLoading = false;
+
+      return;
+
+    }
+
+
+    const request: DepartmentByIdRequest = {
+
+      id: this.currentDeptId
+
+    };
+
+
+    this.departmentService.getById(request).subscribe({
+
+      next: (res) => {
+
+        if (res.success && res.data) {
+
+          this.departmentForm.patchValue({
+
+            Name: res.data.name,
+
+            Description: res.data.description
+
+          });
+        }
+        else {
+          this.toastr.error(
+            res.message || 'Department not found'
+          );
+          this.displayFormDialog = false;
+        }
+        this.isLoading = false;
+      },
+
+      error: () => {
+        this.toastr.error(
+          'Failed to fetch department details'
+        );
+        this.isLoading = false;
+        this.displayFormDialog = false;
+
       }
+
+    });
+
+  }
+
+
+  // =====================================================
+  // UPDATE
+  // =====================================================
+
+  updateDepartmentClick(event: any): void {
+
+    if (this.departmentForm.invalid) {
+
+      this.departmentForm.markAllAsTouched();
+
+      return;
+
+    }
+
+
+    if (!this.currentDeptId) {
+
+      this.toastr.error(
+        'Department ID is missing'
+      );
+
+      return;
+
+    }
+
+
+    this.isLoading = true;
+
+
+    const obj: Department = {
+
+      ...this.departmentForm.value,
+
+      departmentId: this.currentDeptId
+
+    };
+
+
+    this.departmentService.update(obj).subscribe({
+
+      next: (res) => {
+
+        if (res.success) {
+
+          this.toastr.success(
+            res.message || 'Department updated successfully'
+          );
+
+          this.displayFormDialog = false;
+
+          this.loadDepartments();
+
+        }
+        else {
+
+          this.toastr.error(
+            res.message || 'Failed to update department'
+          );
+
+        }
+
+        this.isLoading = false;
+
+      },
+
+      error: (err) => {
+
+        this.toastr.error(
+          err?.error?.message ||
+          'Failed to update department'
+        );
+
+        this.isLoading = false;
+
+      }
+
+    });
+
+  }
+
+
+  // =====================================================
+  // VIEW
+  // =====================================================
+
+  openViewModal(dept: Department): void {
+
+    this.currentDeptId = dept.departmentId;
+
+    this.selectedDepartment = null;
+
+    this.isViewLoading = true;
+
+    this.displayViewDialog = true;
+
+
+    if (!this.currentDeptId) {
+
       this.isViewLoading = false;
-    },
-    error: () => {
-      this.toastr.error('Failed to fetch department details');
-      this.isViewLoading = false;
-      this.viewModalInstance?.hide();
+
+      return;
+
     }
-  });
-}
+
+
+    const request: DepartmentByIdRequest = {
+
+      id: this.currentDeptId
+
+    };
+
+
+    this.departmentService.getById(request).subscribe({
+
+      next: (res) => {
+
+        if (res.success) {
+
+          this.selectedDepartment = res.data;
+
+        }
+        else {
+
+          this.toastr.error(
+            res.message || 'Department not found'
+          );
+
+          this.displayViewDialog = false;
+
+        }
+
+        this.isViewLoading = false;
+
+      },
+
+      error: () => {
+
+        this.toastr.error(
+          'Failed to fetch department details'
+        );
+
+        this.isViewLoading = false;
+
+        this.displayViewDialog = false;
+
+      }
+
+    });
+
   }
 
-  // 6. Delete Department
-  onDelete(id: number) {
-    if (confirm('Are you sure you want to delete this department?')) {
-      // this.deptService.delete(id).subscribe({
-      //   next: (res) => {
-      //     if (res.success) {
-      //       this.toastr.success(res.message);
-      //       this.loadDepartments();
-      //     } else {
-      //       this.toastr.error(res.message);
-      //     }
-      //   }
-      // });
-    }
+
+  // =====================================================
+  // DELETE
+  // =====================================================
+
+  onDelete(id: number): void {
+
+    this.confirmationService.confirm({
+
+      message:
+        'Are you sure you want to delete this department?',
+
+      header:
+        'Delete Department',
+
+      icon:
+        'pi pi-exclamation-triangle',
+
+      acceptLabel:
+        'Yes, Delete',
+
+      rejectLabel:
+        'Cancel',
+
+      accept: () => {
+
+        this.deleteDepartment(id);
+
+      }
+
+    });
+
   }
 
-  // --- Bootstrap Modal Helpers ---
-  private showModal() {
-    this.isLoading = false;
-    const modalElement = document.getElementById('deptModal');
-    if (modalElement) {
-      this.formModal = new bootstrap.Modal(modalElement);
-      this.formModal.show();
-    }
+
+  private deleteDepartment(id: number): void {
+
+    this.isLoading = true;
+
+
+    this.departmentService.delete(id).subscribe({
+
+      next: (res) => {
+
+        if (res.success) {
+
+          this.toastr.success(
+            res.message || 'Department deleted successfully'
+          );
+
+          this.loadDepartments();
+
+        }
+        else {
+
+          this.toastr.error(
+            res.message || 'Failed to delete department'
+          );
+
+        }
+
+        this.isLoading = false;
+
+      },
+
+      error: (err) => {
+
+        this.toastr.error(
+          err?.error?.message ||
+          'Failed to delete department'
+        );
+
+        this.isLoading = false;
+
+      }
+
+    });
+
   }
 
-  private hideModal() {
-    if (this.formModal) {
-      this.formModal.hide();
-    }
-  }
 }

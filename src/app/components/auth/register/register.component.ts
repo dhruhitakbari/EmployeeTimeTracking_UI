@@ -16,7 +16,7 @@ export class RegisterComponent {
   loading: boolean = false;
 
   // Define the base API URL to display to the user for reference
-  apiBaseUrl: string = 'https://localhost:7001/api/Auth/register';
+  apiBaseUrl: string = 'https://localhost:44334/api/Auth/register';
 
   constructor(
     private fb: FormBuilder,

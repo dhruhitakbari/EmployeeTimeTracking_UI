@@ -1,159 +1,299 @@
-<div class="container-fluid">
+<div class="department-page">
 
   <!-- PAGE HEADER -->
-  <div class="row mb-4 align-items-center">
-    <div class="col">
-      <h3 class="text-primary fw-bold">Departments</h3>
-      <p class="text-muted">Manage company departments</p>
+  <div class="page-header">
+
+    <div>
+      <h2>Departments</h2>
+      <p>Manage company departments</p>
     </div>
-    <div class="col-auto">
-      <button class="btn btn-primary rounded-pill px-4 shadow-sm" (click)="openAddModal()">
-        <i class="bi bi-plus-lg me-2"></i> Add New
-      </button>
-    </div>
+
+    <p-button
+      label="Add Department"
+      icon="pi pi-plus"
+      (onClick)="openAddModal()">
+    </p-button>
+
   </div>
 
-  <!-- CONTENT CARD -->
-  <div class="card shadow-sm border-0 rounded-4">
-    <div class="card-body p-0">
 
-      <!-- LOADING SPINNER -->
-      <div *ngIf="isLoading && departments.length === 0" class="text-center p-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2 text-muted">Loading...</p>
-      </div>
+  <!-- TABLE -->
+  <div class="table-card">
 
-      <!-- TABLE -->
-      <div class="table-responsive" *ngIf="departments.length > 0">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="bg-light">
-            <tr>
-              <th class="ps-4 py-3 text-secondary text-uppercase font-size-12">#</th>
-              <th class="py-3 text-secondary text-uppercase font-size-12">Department Name</th>
-              <th class="py-3 text-secondary text-uppercase font-size-12">Created Date</th>
-              <th class="pe-4 py-3 text-end text-secondary text-uppercase font-size-12">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let dept of departments; let i = index">
-              <td class="ps-4 fw-bold text-muted">{{ i + 1 }}</td>
-              <td>
-                <span class="fw-semibold text-dark">{{ dept.name }}</span>
-              </td>
-              <td class="text-muted">
-                {{ dept.createdDate | date:'mediumDate' }}
-              </td>
-              <td class="pe-4 text-end">
-                <button class="btn btn-sm btn-soft-info me-2" (click)="openViewModal(dept)"
-                  title="View Details">
-                  <i class="bi bi-eye-fill"></i>
-                </button>
+    <!-- LOADING -->
+    <div
+      *ngIf="isLoading && departments.length === 0"
+      class="loading-container">
 
-                <button class="btn btn-sm btn-soft-warning me-2" (click)="openEditModal(dept)" title="Edit">
-                  <i class="bi bi-pencil-fill"></i>
-                </button>
+      <p-progressSpinner
+        strokeWidth="4"
+        [style]="{ width: '40px', height: '40px' }">
+      </p-progressSpinner>
 
-                <button class="btn btn-sm btn-soft-danger" (click)="onDelete(dept.departmentId)" title="Delete">
-                  <i class="bi bi-trash-fill"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- EMPTY STATE -->
-      <div *ngIf="!isLoading && departments.length === 0" class="text-center p-5">
-        <i class="bi bi-folder2-open display-1 text-muted opacity-25"></i>
-        <h5 class="mt-3 text-muted">No Departments Found</h5>
-        <p>Click "Add New" to get started.</p>
-      </div>
+      <span>Loading departments...</span>
 
     </div>
-  </div>
 
-</div>
 
-<!-- BOOTSTRAP MODAL (Add/Edit Form) -->
-<div class="modal fade" id="deptModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+    <!-- PRIME NG TABLE -->
+    <p-table
+      *ngIf="!isLoading || departments.length > 0"
+      [value]="departments"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      styleClass="master-table"
+      [rowHover]="true"
+      responsiveLayout="scroll">
 
       <!-- HEADER -->
-      <div class="modal-header">
-        <h5 class="modal-title">
-          {{ isEditMode ? 'Edit Department' : 'New Department' }}
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+      <ng-template pTemplate="header">
+
+        <tr>
+
+          <th class="index-column">
+            #
+          </th>
+
+          <th>
+            Department Name
+          </th>
+
+          <th>
+            Created Date
+          </th>
+
+          <th class="actions-column">
+            Actions
+          </th>
+
+        </tr>
+
+      </ng-template>
+
 
       <!-- BODY -->
-      <div class="modal-body">
-        <app-dynamic-form [form]="departmentForm" [fields]="fields" [isLoading]="isLoading"
-          (formSubmit)="isEditMode ? updateDepartmentClick($event) : insertDepartmentClick($event)">
-        </app-dynamic-form>
+      <ng-template
+        pTemplate="body"
+        let-dept
+        let-i="rowIndex">
+
+        <tr>
+
+          <td class="index-column">
+            {{ i + 1 }}
+          </td>
+
+
+          <td>
+            <span class="department-name">
+              {{ dept.name }}
+            </span>
+          </td>
+
+
+          <td class="created-date">
+            {{ dept.createdDate | date:'mediumDate' }}
+          </td>
+
+
+          <td class="actions-column">
+
+            <!-- VIEW -->
+            <p-button
+              icon="pi pi-eye"
+              [text]="true"
+              severity="info"
+              pTooltip="View Details"
+              tooltipPosition="top"
+              (onClick)="openViewModal(dept)">
+            </p-button>
+
+
+            <!-- EDIT -->
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              severity="warn"
+              pTooltip="Edit Department"
+              tooltipPosition="top"
+              (onClick)="openEditModal(dept)">
+            </p-button>
+
+
+            <!-- DELETE -->
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              pTooltip="Delete Department"
+              tooltipPosition="top"
+              (onClick)="onDelete(dept.departmentId)">
+            </p-button>
+
+          </td>
+
+        </tr>
+
+      </ng-template>
+
+
+      <!-- EMPTY -->
+      <ng-template pTemplate="emptymessage">
+
+        <tr>
+
+          <td colspan="4">
+
+            <div class="empty-state">
+
+              <i class="pi pi-building"></i>
+
+              <h3>No Departments Found</h3>
+
+              <p>
+                Click "Add Department" to create your first department.
+              </p>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      </ng-template>
+
+    </p-table>
+
+  </div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- ADD / EDIT -->
+<!-- ================================================= -->
+
+<p-dialog
+  [(visible)]="displayFormDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '500px' }"
+  [header]="isEditMode ? 'Edit Department' : 'New Department'">
+
+  <app-dynamic-form
+    [form]="departmentForm"
+    [fields]="fields"
+    [isLoading]="isLoading"
+    (formSubmit)="
+      isEditMode
+        ? updateDepartmentClick($event)
+        : insertDepartmentClick($event)
+    ">
+  </app-dynamic-form>
+
+</p-dialog>
+
+
+<!-- ================================================= -->
+<!-- VIEW -->
+<!-- ================================================= -->
+
+<p-dialog
+  [(visible)]="displayViewDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '500px' }"
+  header="Department Details">
+
+  <!-- LOADING -->
+
+  <div
+    *ngIf="isViewLoading"
+    class="view-loading">
+
+    <p-progressSpinner
+      strokeWidth="4"
+      [style]="{ width: '45px', height: '45px' }">
+    </p-progressSpinner>
+
+    <p>Fetching department details...</p>
+
+  </div>
+
+
+  <!-- DETAILS -->
+
+  <div
+    *ngIf="!isViewLoading && selectedDepartment"
+    class="department-details">
+
+    <div class="department-icon">
+      <i class="pi pi-building"></i>
+    </div>
+
+
+    <h2>
+      {{ selectedDepartment.name }}
+    </h2>
+
+
+    <p class="description">
+      {{
+        selectedDepartment.description ||
+        'No specific description has been provided for this department yet.'
+      }}
+    </p>
+
+
+    <div class="details-grid">
+
+      <div class="detail-card">
+
+        <span class="detail-label">
+          Department ID
+        </span>
+
+        <span class="detail-value">
+          #{{ selectedDepartment.departmentId }}
+        </span>
+
+      </div>
+
+
+      <div class="detail-card">
+
+        <span class="detail-label">
+          Status
+        </span>
+
+        <p-tag
+          value="Active"
+          severity="success">
+        </p-tag>
+
+      </div>
+
+
+      <div class="detail-card full-width">
+
+        <span class="detail-label">
+          Created On
+        </span>
+
+        <span class="detail-value">
+          {{ selectedDepartment.createdDate | date:'longDate' }}
+        </span>
+
       </div>
 
     </div>
+
   </div>
-</div>
 
-<!-- BOOTSTRAP MODAL (View Form) -->
-<div class="modal fade" id="viewDeptModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg rounded-4">
+</p-dialog>
 
-      <div class="modal-header border-0 pb-0">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
 
-      <div class="modal-body text-center p-5" *ngIf="isViewLoading">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-3 text-muted">Fetching department details...</p>
-      </div>
+<!-- CONFIRM DELETE -->
 
-      <div class="modal-body text-center pt-0 px-4 pb-4" *ngIf="!isViewLoading && selectedDepartment">
-
-        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 84px; height: 84px;">
-          <i class="bi bi-building display-5"></i>
-        </div>
-
-        <h3 class="fw-bold mb-1 text-dark">{{ selectedDepartment.name }}</h3>
-        <p class="text-muted mb-4 px-3">
-          {{ selectedDepartment.description || 'No specific description has been provided for this department yet.' }}
-        </p>
-
-        <div class="row text-start g-3">
-          <div class="col-6">
-            <div class="p-3 bg-light rounded-3 border border-light-subtle h-100">
-              <span class="d-block text-muted small text-uppercase fw-bold letter-spacing-1 mb-1" style="font-size: 0.75rem;">Department ID</span>
-              <span class="fw-bold text-dark fs-5">#{{ selectedDepartment.departmentId }}</span>
-            </div>
-          </div>
-
-          <div class="col-6">
-            <div class="p-3 bg-light rounded-3 border border-light-subtle h-100">
-              <span class="d-block text-muted small text-uppercase fw-bold letter-spacing-1 mb-1" style="font-size: 0.75rem;">Status</span>
-              <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2 fw-semibold">
-                <i class="bi bi-check-circle-fill me-1"></i> Active
-              </span>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div class="p-3 bg-light rounded-3 border border-light-subtle d-flex align-items-center">
-              <div class="bg-white rounded p-2 text-secondary shadow-sm me-3">
-                <i class="bi bi-calendar3"></i>
-              </div>
-              <div>
-                <span class="d-block text-muted small text-uppercase fw-bold letter-spacing-1" style="font-size: 0.75rem;">Created On</span>
-                <span class="fw-bold text-dark">{{ selectedDepartment.createdDate | date:'longDate' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
+<p-confirmDialog></p-confirmDialog>

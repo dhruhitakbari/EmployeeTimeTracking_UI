@@ -1,61 +1,115 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { MenuItem } from 'primeng/api';
 import { AuthService } from '../../../services/auth.service';
-import { MenuItem } from '../../../models/ui.models';
 
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.css',
+  styleUrl: './sidebar.component.css'
 })
 export class SidebarComponent implements OnInit {
+
   @Output() onToggle = new EventEmitter<boolean>();
 
-  // "isCollapsed" now effectively means "Is Unpinned"
   isCollapsed = false;
-
-  // New variable to track temporary hover state
   isHovered = false;
 
   currentRole: string | null = null;
+
   menuItems: MenuItem[] = [];
 
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.currentRole = this.authService.getUserRole();
+
     this.generateMenu();
   }
 
-  // Handle Mouse Enter/Leave
   onHover(state: boolean): void {
     this.isHovered = state;
   }
 
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
+
     this.onToggle.emit(this.isCollapsed);
   }
 
   generateMenu(): void {
-  // ✅ updated dashboard routes
-  const dashboardRoute = this.currentRole === 'Admin'
-    ? '/app/admin-dashboard'
-    : '/app/employee-dashboard';
 
-  const allItems: MenuItem[] = [
-    { label: 'Dashboard',    icon: 'bi-speedometer2',  route: dashboardRoute,              roles: ['Admin', 'Employee'] },
-    { label: 'Departments',  icon: 'bi-building',      route: '/app/admin/departments',    roles: ['Admin'] },
-    { label: 'Designations', icon: 'bi-person-badge',  route: '/app/admin/designations',   roles: ['Admin'] },
-    { label: 'Employees',    icon: 'bi-people',         route: '/app/admin/users',          roles: ['Admin'] },
-    { label: 'Projects',     icon: 'bi-briefcase',      route: '/app/admin/projects',       roles: ['Admin'] },
-    { label: 'Time Sheet',   icon: 'bi-clock-history',  route: '/app/employee/timesheet',   roles: ['Employee'] },
-    { label: 'My Profile',   icon: 'bi-person-circle',  route: '/app/employee/profile',     roles: ['Admin', 'Employee'] },
-  ];
+    const dashboardRoute =
+      this.currentRole === 'Admin'
+        ? '/app/admin-dashboard'
+        : '/app/employee-dashboard';
 
-  if (this.currentRole) {
-    this.menuItems = allItems.filter(item => item.roles.includes(this.currentRole!));
+    const allItems: MenuItem[] = [
+
+      {
+        label: 'Dashboard',
+        icon: 'pi pi-home',
+        routerLink: dashboardRoute,
+        visible: this.hasRole(['Admin', 'Employee'])
+      },
+
+      {
+        label: 'Users',
+        icon: 'pi pi-users',
+        routerLink: '/app/admin/users',
+        visible: this.hasRole(['Admin'])
+      },
+
+      {
+        label: 'Departments',
+        icon: 'pi pi-building',
+        routerLink: '/app/admin/departments',
+        visible: this.hasRole(['Admin'])
+      },
+
+      {
+        label: 'Designations',
+        icon: 'pi pi-id-card',
+        routerLink: '/app/admin/designations',
+        visible: this.hasRole(['Admin'])
+      },
+
+      {
+        label: 'Employees',
+        icon: 'pi pi-user',
+        routerLink: '/app/admin/users',
+        visible: this.hasRole(['Admin'])
+      },
+
+      {
+        label: 'Projects',
+        icon: 'pi pi-briefcase',
+        routerLink: '/app/admin/projects',
+        visible: this.hasRole(['Admin'])
+      },
+
+      {
+        label: 'Time Sheet',
+        icon: 'pi pi-clock',
+        routerLink: '/app/employee/timesheet',
+        visible: this.hasRole(['Employee'])
+      },
+
+      {
+        label: 'My Profile',
+        icon: 'pi pi-user',
+        routerLink: '/app/employee/profile',
+        visible: this.hasRole(['Admin', 'Employee'])
+      }
+    ];
+
+    this.menuItems = allItems.filter(item => item.visible);
   }
-}
+
+  private hasRole(roles: string[]): boolean {
+    return !!this.currentRole && roles.includes(this.currentRole);
+  }
 
   onLogout(): void {
     this.authService.logout();
